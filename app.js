@@ -1,41 +1,44 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
+const { MongoClient } = require('mongodb');
+const fs = require('fs');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const app = express();
+const port = 3000;
 
-var app = express();
+async function main() {
+  const client = new MongoClient('mongodb://localhost:27017');
+  try {
+    // Connect to the MongoDB cluster
+    await client.connect();
+    // const result = await client.db('accessLogAnalyzer').collection('accessLogs').insertOne({ip: '2.3.4.5'});
+    fs.watch(buttonPressesLogFile, (event, filename) => {
+      if (filename) {
+        if (fsWait) return;
+        fsWait = setTimeout(() => {
+          fsWait = false;
+        }, 100);
+        const md5Current = md5(fs.readFileSync(buttonPressesLogFile));
+        if (md5Current === md5Previous) {
+          return;
+        }
+        md5Previous = md5Current;
+        console.log(`${filename} file Changed`);
+      }
+    });
+    console.log(`New log entry created with the following id: ${result.insertedId}`);
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+    app.get('/', (req, res) => {
+      res.send('Hello World!');
+    });
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
-
-module.exports = app;
+    app.listen(port, () => {
+      console.log(`Localhost server started on port ${port}`);
+    });
+  } catch (err) {
+    console.error(err);
+  } finally {
+    // Close the connection to the MongoDB cluster
+    await client.close();
+  }
+}
+main();

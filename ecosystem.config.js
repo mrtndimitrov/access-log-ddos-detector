@@ -3,7 +3,7 @@ module.exports = {
     name: 'DdosDetector',
     script: 'app.js',
     args: '--log-path=/data/prosveta/logs/access',
-    instances: 'max',
+    instances: '1',
     autorestart: true,
     watch: false,
     max_memory_restart: '16G',

@@ -1,44 +1,58 @@
 const express = require('express');
-const { MongoClient } = require('mongodb');
-const fs = require('fs');
+const { FileWatcherService } = require('./file-watcher-service');
+const { BlockIpManagementService } = require('./block-ip-management-service');
+const {DbService} = require("./db-service");
 
 const app = express();
 const port = 3000;
 
 async function main() {
-  const client = new MongoClient('mongodb://localhost:27017');
+  app.set('views', './views');
+  app.set('view engine', 'ejs');
+
+  const argv = require('minimist')(process.argv.slice(2));
+
   try {
-    // Connect to the MongoDB cluster
-    await client.connect();
-    // const result = await client.db('accessLogAnalyzer').collection('accessLogs').insertOne({ip: '2.3.4.5'});
-    fs.watch(buttonPressesLogFile, (event, filename) => {
-      if (filename) {
-        if (fsWait) return;
-        fsWait = setTimeout(() => {
-          fsWait = false;
-        }, 100);
-        const md5Current = md5(fs.readFileSync(buttonPressesLogFile));
-        if (md5Current === md5Previous) {
-          return;
-        }
-        md5Previous = md5Current;
-        console.log(`${filename} file Changed`);
+    // initialize database
+    const db = await DbService.getInstance();
+
+    // initialize the block ip management service
+    const blockIpManagement = new BlockIpManagementService(argv);
+
+    // Check which files we need to process and watch for changes
+    FileWatcherService.parseFiles(argv, (files) => {
+      for(const file of files) {
+        new FileWatcherService(file);
       }
     });
-    console.log(`New log entry created with the following id: ${result.insertedId}`);
 
-    app.get('/', (req, res) => {
-      res.send('Hello World!');
+    // start the http server
+    app.get('/', async (req, res) => {
+      // let's get a count of all IPs in the last 24 hours
+      const pipeline = [
+        { $match: { time: { $gt: new Date(new Date().getTime() - (24 * 60 * 60 * 1000)) } } },
+        { $group: { _id: '$ip', count: { $sum: 1 } } },
+        { $sort:  { count: -1 } }
+      ];
+      const aggCursor = db.logEntriesCollection.aggregate(pipeline);
+      const allDocs = await aggCursor.toArray();
+      const ips = [];
+      let allRequests = 0;
+      let i = 1;
+      for (const doc of allDocs) {
+        allRequests += doc.count;
+        if(i <= 20 || doc.count > 10) {
+          ips.push({i: i, address: doc._id, num: doc.count});
+        }
+        i++;
+      }
+      res.render('index', { ips: ips, unique: allDocs.length, all: allRequests });
     });
-
     app.listen(port, () => {
-      console.log(`Localhost server started on port ${port}`);
+      console.info(`Localhost server started on port ${port}`);
     });
   } catch (err) {
     console.error(err);
-  } finally {
-    // Close the connection to the MongoDB cluster
-    await client.close();
   }
 }
 main();

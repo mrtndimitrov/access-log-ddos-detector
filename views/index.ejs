@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>DDOS detector</title>
+</head>
+<body>
+    <pre>
+### TOTAL REQUESTS: <%= all %>
+### TOTAL UNIQUES IPs: <%= unique %>
+
+# TOP 20 (or > 1000 hits) IPs:
+<%_ for(const ip of ips) { _%>
+<%= ip.i %>. <a href=""><%= ip.address %></a>: <%= ip.num %>
+<%_ } _%>
+</pre>
+</body>
+</html>

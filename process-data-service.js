@@ -19,25 +19,29 @@ const { DbService } = require('./db-service');
  */
 
 class ProcessDataService {
-    async parseLogEntry(data) {
-        const alpine = new Alpine();
-        const lines = data.split(/[\r]?\n/);
-        for (const line of lines) {
-            if(line) {
-                const alpineJson = alpine.parseLine(line);
-                const [method, request, protocol] = alpineJson.request.split(' ');
-                const json = {
-                    ip: alpineJson.remoteHost,
-                    time: new Date(moment(alpineJson.time, 'DD/MMM/YYYY:HH:mm:ss Z')),
-                    method, request, protocol,
-                    status: alpineJson.status,
-                    size: alpineJson.sizeCLF,
-                    referer: alpineJson['RequestHeader Referer'],
-                    user_agent: alpineJson['RequestHeader User-agent']
-                };
-                const db = await DbService.getInstance();
-                await db.insertLogEntry(json);
+    async parseLogEntry(data, filename) {
+        try {
+            const alpine = new Alpine();
+            const lines = data.split(/[\r]?\n/);
+            for (const line of lines) {
+                if (line) {
+                    const alpineJson = alpine.parseLine(line);
+                    const [method, request, protocol] = alpineJson.request.split(' ');
+                    const json = {
+                        ip: alpineJson.remoteHost,
+                        time: new Date(moment(alpineJson.time, 'DD/MMM/YYYY:HH:mm:ss Z')),
+                        method, request, protocol,
+                        status: alpineJson.status,
+                        size: alpineJson.sizeCLF,
+                        referer: alpineJson['RequestHeader Referer'],
+                        user_agent: alpineJson['RequestHeader User-agent']
+                    };
+                    const db = await DbService.getInstance();
+                    await db.insertLogEntry(json);
+                }
             }
+        } catch (err) {
+            console.error(`Error parsing data from file "${filename}": ${err.message}`);
         }
     }
 }

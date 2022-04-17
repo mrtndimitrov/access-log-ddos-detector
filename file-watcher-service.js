@@ -2,15 +2,19 @@ const fs = require('fs');
 const glob = require('glob');
 const path = require('path');
 const async = require('async');
+const chokidar = require('chokidar');
+const isGlob = require('is-glob');
 const { ProcessDataService } = require('./process-data-service');
 const { DbService } = require('./db-service');
+const { DirWatcherService } = require('./dir-watcher-service');
+
+const CHUNK_SIZE = 1024 * 1014 * 4;
 
 class FileWatcherService {
     filename = null;
     db = null;
     mongoFileData = null;
     fileStat = null;
-    changeDetected = false;
 
     // filename can be a single file, directory or glob expression
     constructor(filename) {
@@ -53,7 +57,8 @@ class FileWatcherService {
             const filename = this.filename;
             function doRead(callback) {
                 console.info(`Start reading from file ${filename} at ${start}, length ${length}`);
-                fs.read(fd, buffer, readSoFar, (length - readSoFar), start, (err, nread) => {
+                fs.read(fd, buffer, readSoFar, (length - readSoFar) > CHUNK_SIZE ? CHUNK_SIZE : (length - readSoFar),
+                        start, (err, nread) => {
                     if (err) {
                         console.error(`Reading from file ${filename} failed.`);
                         return;
@@ -81,7 +86,7 @@ class FileWatcherService {
                 // ok, we have our buffer filled
                 const data = buffer.toString('utf8');
                 console.info(`Read from file ${this.filename}: ${data.length}`);
-                await (new ProcessDataService()).parseLogEntry(data);
+                await (new ProcessDataService()).parseLogEntry(data, this.filename);
                 // let's update the size of the read
                 this.mongoFileData.read += length;
                 await this.db.updateFileRead(this.mongoFileData._id, this.mongoFileData.read);
@@ -95,40 +100,37 @@ class FileWatcherService {
 
     watchForChanges() {
         console.log(`Start watching: ${this.filename}`);
-        fs.watch(this.filename, {}, (event, filename) => {
-            if (this.changeDetected) {
-                return;
+        chokidar.watch(this.filename).on('change', (filename, stats) => {
+            console.log('Change detected')
+            this.fileStat = stats;
+            if(this.fileStat.size > this.mongoFileData.read){
+                this.readFromFile(this.mongoFileData.read, this.fileStat.size - this.mongoFileData.read, false);
             }
-            if (event === 'change') {
-                this.changeDetected = true;
-                // let's wait for a second if there are other change events coming
-                setTimeout(() => {
-                    this.fileStat = fs.lstatSync(this.filename);
-                    if(this.fileStat.size > this.mongoFileData.read){
-                        this.readFromFile(this.mongoFileData.read, this.fileStat.size - this.mongoFileData.read, false);
-                    }
-                    this.changeDetected = false;
-                }, 1000);
-            }
+
         });
     }
 
     static parseFiles(argv, mainCallback) {
-        let pathsToWatch = argv['log-path'] ? argv['log-path'] : [];
+        let pathsToWatch = argv['path-watch'] ? argv['path-watch'] : [];
         if (!Array.isArray(pathsToWatch)) {
             pathsToWatch = [pathsToWatch];
         }
-        if (argv.l) {
-            if (Array.isArray(argv.l)) {
-                pathsToWatch = pathsToWatch.concat(argv.l);
+        if (argv.p) {
+            if (Array.isArray(argv.p)) {
+                pathsToWatch = pathsToWatch.concat(argv.p);
             } else {
-                pathsToWatch.push(argv.l);
+                pathsToWatch.push(argv.p);
             }
         }
         const allFiles = [];
         async.each(pathsToWatch, (filename, callback) => {
             if(fs.existsSync(filename) && fs.lstatSync(filename).isDirectory()) {
+                // we need to watch the dir for any new files
+                new DirWatcherService(filename, '*');
                 filename = path.join(filename, '*');
+            } else if (isGlob(filename)) {
+                // we need to watch the dir for new files that match the glob expression
+                new DirWatcherService(path.dirname(filename), path.basename(filename));
             }
             glob(filename, [], async (er, files) => {
                 if(er) {

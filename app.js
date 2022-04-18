@@ -41,7 +41,7 @@ async function main() {
       let i = 1;
       for (const doc of allDocs) {
         allRequests += doc.count;
-        if(i <= 20 || doc.count > 10) {
+        if(i <= 20 || doc.count > 1000) {
           ips.push({i: i, address: doc._id, num: doc.count});
         }
         i++;

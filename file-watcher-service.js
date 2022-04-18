@@ -100,7 +100,7 @@ class FileWatcherService {
     watchForChanges() {
         console.log(`Start watching: ${this.filename}`);
         chokidar.watch(this.filename).on('change', (filename, stats) => {
-            this.fileStat = stats;
+            this.fileStat = fs.lstatSync(this.filename);
             if(this.fileStat.size > this.mongoFileData.read){
                 this.readFromFile(this.mongoFileData.read, this.fileStat.size - this.mongoFileData.read, false);
             }

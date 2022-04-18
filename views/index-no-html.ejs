@@ -1,0 +1,7 @@
+### TOTAL REQUESTS: <%= all %>
+### TOTAL UNIQUES IPs: <%= unique %>
+
+# TOP 20 (or > 1000 hits) IPs:
+<%_ for(const ip of ips) { _%>
+<%= ip.i %>. <%= ip.address %>: <%= ip.num %>
+<%_ } _%>

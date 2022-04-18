@@ -46,7 +46,7 @@ async function main() {
         }
         i++;
       }
-      res.render('index', { ips: ips, unique: allDocs.length, all: allRequests });
+      res.render(req.query.html === 'no' ? 'index-no-html' : 'index', { ips: ips, unique: allDocs.length, all: allRequests });
     });
     app.listen(port, () => {
       console.info(`Localhost server started on port ${port}`);

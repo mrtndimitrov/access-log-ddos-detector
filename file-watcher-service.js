@@ -56,7 +56,6 @@ class FileWatcherService {
             let readSoFar = 0;
             const filename = this.filename;
             function doRead(callback) {
-                console.info(`Start reading from file ${filename} at ${start}, length ${length}`);
                 fs.read(fd, buffer, readSoFar, (length - readSoFar) > CHUNK_SIZE ? CHUNK_SIZE : (length - readSoFar),
                         start, (err, nread) => {
                     if (err) {
@@ -101,7 +100,6 @@ class FileWatcherService {
     watchForChanges() {
         console.log(`Start watching: ${this.filename}`);
         chokidar.watch(this.filename).on('change', (filename, stats) => {
-            console.log('Change detected')
             this.fileStat = stats;
             if(this.fileStat.size > this.mongoFileData.read){
                 this.readFromFile(this.mongoFileData.read, this.fileStat.size - this.mongoFileData.read, false);

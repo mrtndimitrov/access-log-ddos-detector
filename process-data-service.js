@@ -41,7 +41,7 @@ class ProcessDataService {
                 }
             }
         } catch (err) {
-            console.error(`Error parsing data from file "${filename}": ${err.message}`);
+            console.error(`Error parsing data "${data}" from file "${filename}": ${err.message}`);
         }
     }
 }

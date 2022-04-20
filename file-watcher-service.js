@@ -15,6 +15,7 @@ class FileWatcherService {
     db = null;
     mongoFileData = null;
     fileStat = null;
+    leftOverString = '';
 
     // filename can be a single file, directory or glob expression
     constructor(filename) {
@@ -46,54 +47,53 @@ class FileWatcherService {
         }
     }
 
+    // we have to read in chunks. otherwise the log file can be too large to handle in memory
     readFromFile(start, length, initial) {
         fs.open(this.filename, 'r', (err, fd) => {
             if (err) {
                 console.error(`Opening file ${this.filename} for read failed.`);
                 return;
             }
-            const buffer = Buffer.alloc(length);
-            let readSoFar = 0;
-            const filename = this.filename;
-            function doRead(callback) {
-                fs.read(fd, buffer, readSoFar, (length - readSoFar) > CHUNK_SIZE ? CHUNK_SIZE : (length - readSoFar),
-                        start, (err, nread) => {
-                    if (err) {
-                        console.error(`Reading from file ${filename} failed.`);
-                        return;
-                    }
-                    if (nread === 0) {
-                        // we are at the end of the file. strange but maybe it was truncated at the moment we read.
-                        fs.close(fd, function (err) {});
-                        console.warn(`Reached file end before reading all data. file: ${filename}`);
-                        // update the read length
-                        length = readSoFar;
-                        callback();
-                    } else {
-                        readSoFar += nread;
-                        // ok, did we read the whole thing?
-                        if (readSoFar < length) {
-                            doRead(callback);
-                        } else {
-                            fs.close(fd, function (err) {});
-                            callback();
-                        }
-                    }
-                });
-            }
-            doRead(async () => {
-                // ok, we have our buffer filled
-                const data = buffer.toString('utf8');
-                console.info(`Read from file ${this.filename}: ${data.length}`);
-                await (new ProcessDataService()).parseLogEntry(data, this.filename);
+
+            this.doRead(fd, start, length, 0,async (actualReadSize) => {
                 // let's update the size of the read
-                this.mongoFileData.read += length;
+                this.mongoFileData.read += actualReadSize;
                 await this.db.updateFileRead(this.mongoFileData._id, this.mongoFileData.read);
                 if(initial) {
                     // now start watching for changes
                     this.watchForChanges();
                 }
             });
+        });
+    }
+
+    doRead(fd, start, length, readSoFar, callback) {
+        const currentLength = (length - readSoFar) > CHUNK_SIZE ? CHUNK_SIZE : (length - readSoFar);
+        const buffer = Buffer.alloc(currentLength);
+        fs.read(fd, buffer, 0, currentLength, start, async (err, nread) => {
+            if (err) {
+                console.error(`Reading from file ${this.filename} failed.`);
+                return;
+            }
+            if (nread === 0) {
+                // we are at the end of the file. strange but maybe because it was truncated at the moment we read.
+                fs.close(fd, function (err) {});
+                console.warn(`Reached file end before reading all data. file: ${this.filename}`);
+                callback(readSoFar);
+            } else {
+                const data = this.leftOverString + buffer.toString('utf8');
+                console.info(`Read from file ${this.filename}: ${data.length}`);
+                this.leftOverString = await (new ProcessDataService()).parseLogEntry(data, this.filename);
+                console.log(this.leftOverString);
+                readSoFar += nread;
+                // ok, did we read the whole thing?
+                if (readSoFar < length) {
+                    this.doRead(fd, start, length, readSoFar, callback);
+                } else {
+                    fs.close(fd, function (err) {});
+                    callback(readSoFar);
+                }
+            }
         });
     }
 
@@ -124,11 +124,15 @@ class FileWatcherService {
         async.each(pathsToWatch, (filename, callback) => {
             if(fs.existsSync(filename) && fs.lstatSync(filename).isDirectory()) {
                 // we need to watch the dir for any new files
-                new DirWatcherService(filename, '*');
+                new DirWatcherService(filename, '*', (newFileNameToWatch) => {
+                    new FileWatcherService(newFileNameToWatch);
+                });
                 filename = path.join(filename, '*');
             } else if (isGlob(filename)) {
                 // we need to watch the dir for new files that match the glob expression
-                new DirWatcherService(path.dirname(filename), path.basename(filename));
+                new DirWatcherService(path.dirname(filename), path.basename(filename), (newFileNameToWatch) => {
+                    new FileWatcherService(newFileNameToWatch);
+                });
             }
             glob(filename, [], async (er, files) => {
                 if(er) {

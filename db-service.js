@@ -9,13 +9,27 @@ class DbService {
 
     async initialize() {
         try {
-            this.client = new MongoClient('mongodb://localhost:27017');
+            const argv = require('minimist')(process.argv.slice(2));
+            const hostname = argv['mongodb-hostname'] ? argv['mongodb-hostname'] : 'localhost';
+            const port = argv['mongodb-port'] ? argv['mongodb-port'] : '27017';
+            this.client = new MongoClient(`mongodb://${hostname}:${port}`);
             // Connect to the MongoDB cluster
             await this.client.connect();
             console.info('MongoDB server connected.');
             this.db = this.client.db('accessLogAnalyzer');
-            this.watchedFilesCollection = await this.db.collection('watchedFiles');
-            this.logEntriesCollection = await this.db.collection('logEntries');
+            if(await this.doesCollectionExistInDb('watchedFiles')) {
+                this.watchedFilesCollection = await this.db.collection('watchedFiles');
+            } else {
+                this.watchedFilesCollection = await this.db.createCollection('watchedFiles');
+            }
+            if(await this.doesCollectionExistInDb('logEntries')) {
+                this.logEntriesCollection = await this.db.collection('logEntries');
+            } else {
+                this.logEntriesCollection = await this.db.createCollection('logEntries');
+                await this.logEntriesCollection.createIndex({ ip: 1 });
+                await this.logEntriesCollection.createIndex({ time: -1 });
+                await this.logEntriesCollection.createIndex({ time: -1, ip: 1 });
+            }
         } catch (err) {
             console.error(err);
         }
@@ -32,6 +46,12 @@ class DbService {
     }
     async insertLogEntry(doc) {
         return await this.logEntriesCollection.insertOne(doc);
+    }
+    async doesCollectionExistInDb(collectionName) {
+        const collections = await this.db.collections();
+        return collections.some(
+            (collection) => collection.collectionName === collectionName
+        );
     }
 
     static async getInstance() {

@@ -13,7 +13,7 @@
 
 # TOP 20 (or > 1000 hits) IPs:
 <%_ for(const ip of ips) { _%>
-<%= ip.i %>. <a href=""><%= ip.address %></a>: <%= ip.num %>
+<%= ip.i %>. <a href=""><%= ip.address %></a>: <%= ip.num %> (all time: <%= ip.allTime %>)<% if(ip.requestPatterns){ %> => request patterns: <%= ip.requestPatterns %><% } %>
 <%_ } _%>
 </pre>
 </body>

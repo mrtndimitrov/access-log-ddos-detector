@@ -20,11 +20,12 @@ const { DbService } = require('./db-service');
 
 class ProcessDataService {
     async parseLogEntry(data, filename) {
-        try {
-            const alpine = new Alpine();
-            const lines = data.split(/[\r]?\n/);
-            for (const line of lines) {
-                if (line) {
+        const alpine = new Alpine();
+        const lines = data.split(/[\r]?\n/);
+        const leftOver = lines.pop();
+        for (const line of lines) {
+            if (line) {
+                try {
                     const alpineJson = alpine.parseLine(line);
                     const [method, request, protocol] = alpineJson.request.split(' ');
                     const json = {
@@ -38,11 +39,12 @@ class ProcessDataService {
                     };
                     const db = await DbService.getInstance();
                     await db.insertLogEntry(json);
+                } catch(err) {
+                    console.error(`Error parsing line "${line}" from file "${filename}": ${err.message}`);
                 }
             }
-        } catch (err) {
-            console.error(`Error parsing data from file "${filename}": ${err.message}`);
         }
+        return leftOver;
     }
 }
 exports.ProcessDataService = ProcessDataService;

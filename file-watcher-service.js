@@ -70,7 +70,7 @@ class FileWatcherService {
     doRead(fd, start, length, readSoFar, callback) {
         const currentLength = (length - readSoFar) > CHUNK_SIZE ? CHUNK_SIZE : (length - readSoFar);
         const buffer = Buffer.alloc(currentLength);
-        fs.read(fd, buffer, 0, currentLength, start, async (err, nread) => {
+        fs.read(fd, buffer, 0, currentLength, start + readSoFar, async (err, nread) => {
             if (err) {
                 console.error(`Reading from file ${this.filename} failed.`);
                 return;
@@ -82,9 +82,8 @@ class FileWatcherService {
                 callback(readSoFar);
             } else {
                 const data = this.leftOverString + buffer.toString('utf8');
-                console.info(`Read from file ${this.filename}: ${data.length}`);
+                console.info(`Read from file ${this.filename}: ${nread}`);
                 this.leftOverString = await (new ProcessDataService()).parseLogEntry(data, this.filename);
-                console.log(this.leftOverString);
                 readSoFar += nread;
                 // ok, did we read the whole thing?
                 if (readSoFar < length) {

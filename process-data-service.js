@@ -21,7 +21,7 @@ const { DbService } = require('./db-service');
 class ProcessDataService {
     async parseLogEntry(data, filename) {
         const alpine = new Alpine();
-        const lines = data.split(/[\r]?\n/);
+        const lines = data.split(/\r?\n/);
         const leftOver = lines.pop();
         for (const line of lines) {
             if (line) {

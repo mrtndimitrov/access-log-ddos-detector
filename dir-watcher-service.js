@@ -6,8 +6,9 @@ class DirWatcherService {
         console.info(`Start watching directory ${dir} for new files with glob ${globExpression}`);
         const re = globToRegExp(globExpression);
         chokidar.watch(dir, {ignoreInitial: true}).on('add', (filename, stats) => {
+            console.info(`New file ${filename} in directory ${dir}`);
             if(re.test(filename)){
-                console.info(`New file ${filename} in directory ${dir}`);
+                console.info(`Adding new file ${filename} to be watched`);
                 onNewFile(filename);
             }
         });

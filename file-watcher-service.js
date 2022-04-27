@@ -56,9 +56,6 @@ class FileWatcherService {
             }
 
             this.doRead(fd, start, length, 0,async (actualReadSize) => {
-                // let's update the size of the read
-                this.mongoFileData.read += actualReadSize;
-                await this.db.updateFileRead(this.mongoFileData._id, this.mongoFileData.read);
                 if(initial) {
                     // now start watching for changes
                     this.watchForChanges();
@@ -81,6 +78,10 @@ class FileWatcherService {
                 console.warn(`Reached file end before reading all data. file: ${this.filename}`);
                 callback(readSoFar);
             } else {
+                // let's update the size of the read
+                this.mongoFileData.read += nread;
+                await this.db.updateFileRead(this.mongoFileData._id, this.mongoFileData.read);
+                // now let's parse the read data and insert new log entries
                 const data = this.leftOverString + buffer.toString('utf8');
                 console.info(`Read from file ${this.filename}: ${nread}`);
                 this.leftOverString = await (new ProcessDataService()).parseLogEntry(data, this.filename);

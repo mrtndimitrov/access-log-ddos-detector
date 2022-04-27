@@ -3,7 +3,7 @@ class PatternRecognitionService {
     constructor(docs) {
         this.data = docs;
     }
-    requestPatternSearch() {
+    requestsRepetitionSearch() {
         return this.data.length;
     }
 }

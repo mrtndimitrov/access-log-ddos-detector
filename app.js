@@ -52,7 +52,7 @@ async function main() {
               time: {$gt: twentyForHoursAgo},
               ip: doc._id
             }).toArray());
-            ip.requestPatterns = prs.requestPatternSearch();
+            ip.requestPatterns = prs.requestsRepetitionSearch();
           }
           ips.push(ip);
         }

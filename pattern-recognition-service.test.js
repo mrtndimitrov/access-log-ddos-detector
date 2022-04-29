@@ -1,4 +1,4 @@
-const { PatternRecognitionService } = require('./pattern-recognition-service');
+import { PatternRecognitionService } from './pattern-recognition-service.js';
 
 describe('Pattern recognition tests', () => {
     test('Finding requests repetitions', () => {

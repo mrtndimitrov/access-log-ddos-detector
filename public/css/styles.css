@@ -1,0 +1,31 @@
+table.fixed-height thead, table.fixed-height tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+table.fixed-height tbody {
+    display: block;
+    overflow-y: auto;
+    table-layout: fixed;
+    max-height: 200px;
+}
+table.fixed-height td {
+    text-align: center;
+}
+table.fixed-height th.no-wrap {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.sixty-percent {
+    width: 60%;
+}
+.forty-percent {
+    width: 40%;
+}
+.seventy-percent {
+    width: 70%;
+}
+.ten-percent {
+    width: 10%;
+}

@@ -3,41 +3,50 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="/bootstrap-css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="/css/styles.css" rel="stylesheet" crossorigin="anonymous">
     <title>DDOS detector</title>
 </head>
 <body>
-<h1>Hello, world!</h1>
-
-<pre>
-### TOTAL REQUESTS: <%= all %>
-### TOTAL UNIQUES IPs: <%= unique %>
-
-# TOP 20 (or > 1000 hits) IPs:
-<table class="table">
-  <thead>
-    <tr>
-      <th scope="col">#</th>
-      <th scope="col">IP address</th>
-      <th scope="col">Num requests in 24 hours</th>
-      <th scope="col">Num all time requests</th>
-    </tr>
-  </thead>
-  <tbody>
-  <%_ for(const ip of ips) { _%>
-    <tr>
-      <th scope="row"><%= ip.i %>.</th>
-      <td><a href=""><%= ip.address %></a></td>
-      <td><%= ip.num %></td>
-      <td><%= ip.allTime %></td>
-    </tr>
-         :  (all time: )<% if(ip.requestPatterns){ %> => request patterns: <%= ip.requestPatterns %><% } %>
+<div class="container">
+  <h1>Summary of requests for last 24 hours</h1>
+  <hr>
+  <h4>TOTAL REQUESTS: <%= all %></h4>
+  <h4>TOTAL UNIQUES IPs: <%= unique %></h4>
+  <hr>
+  <h4>TOP 20 (or > 1000 hits) IPs</h4>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">IP address</th>
+        <th scope="col"># requests</th>
+        <th scope="col"># unique requests</th>
+        <th scope="col">Total bytes returned</th>
+        <th scope="col"># unique status codes</th>
+        <th scope="col"># unique user agents</th>
+        <th scope="col">Requests repetitions</th>
+        <th scope="col"># all time requests</th>
+      </tr>
+    </thead>
+    <tbody>
+    <%_ for(const ip of ips) { _%>
+      <tr>
+        <th scope="row"><%= ip.i %>.</th>
+        <td><a href="/ip/<%= ip.address %>"><%= ip.address %></a></td>
+        <td><%= ip.num %></td>
+        <td><%= ip.numUnique %></td>
+        <td><%= ip.bytes %></td>
+        <td><%= ip.numStatusCodes %></td>
+        <td><%= ip.numUserAgents %></td>
+        <td><% if(ip.requestsRepetiotions){ %><%= ip.requestsRepetiotions %><% } %></td>
+        <td><% if(ip.allTime){ %><%= ip.allTime %><% } %></td>
+      </tr>
     <%_ } _%>
-  </tbody>
-</table>
-
-</pre>
-
-<script src="node_modules/bootstrap/dist/js/bootstrap.bundle.js" crossorigin="anonymous"></script>
+    </tbody>
+  </table>
+</div>
+<script src="/bootstrap-js/bootstrap.bundle.js" crossorigin="anonymous"></script>
+<script src="/js/script.js" crossorigin="anonymous"></script>
 </body>
 </html>

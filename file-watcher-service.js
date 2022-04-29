@@ -1,16 +1,16 @@
-const fs = require('fs');
-const glob = require('glob');
-const path = require('path');
-const async = require('async');
-const chokidar = require('chokidar');
-const isGlob = require('is-glob');
-const { ProcessDataService } = require('./process-data-service');
-const { DbService } = require('./db-service');
-const { DirWatcherService } = require('./dir-watcher-service');
+import fs from 'fs';
+import glob from 'glob';
+import path from 'path';
+import async from 'async';
+import chokidar from 'chokidar';
+import isGlob from 'is-glob';
+import { ProcessDataService } from './process-data-service.js';
+import { DbService } from './db-service.js';
+import { DirWatcherService } from './dir-watcher-service.js';
 
 const CHUNK_SIZE = 1024 * 1014 * 4;
 
-class FileWatcherService {
+export class FileWatcherService {
     filename = null;
     db = null;
     mongoFileData = null;
@@ -157,4 +157,3 @@ class FileWatcherService {
         });
     }
 }
-exports.FileWatcherService = FileWatcherService;

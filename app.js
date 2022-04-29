@@ -1,16 +1,27 @@
-const express = require('express');
-const { FileWatcherService } = require('./file-watcher-service');
-const { BlockIpManagementService } = require('./block-ip-management-service');
-const { DbService } = require("./db-service");
-const { PatternRecognitionService } = require('./pattern-recognition-service');
+import express from 'express';
+import got from 'got';
+import minimist from 'minimist';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { FileWatcherService } from './file-watcher-service.js';
+import { BlockIpManagementService } from './block-ip-management-service.js';
+import { DbService } from './db-service.js';
+import { PatternRecognitionService } from './pattern-recognition-service.js';
 
 const app = express();
 
 async function main() {
   app.set('views', './views');
   app.set('view engine', 'ejs');
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  app.use('/bootstrap-css', express.static(`${__dirname}/node_modules/bootstrap/dist/css`));
+  app.use('/bootstrap-js', express.static(`${__dirname}/node_modules/bootstrap/dist/js`));
+  app.use('/chart-js', express.static(`${__dirname}/node_modules/chart.js/dist/`));
+  app.use('/css', express.static(`${__dirname}/public/css`));
+  app.use('/js', express.static(`${__dirname}/public/js`));
 
-  const argv = require('minimist')(process.argv.slice(2));
+  const argv = minimist(process.argv.slice(2));
 
   try {
     // initialize database
@@ -30,13 +41,8 @@ async function main() {
     app.get('/', async (req, res) => {
       // let's get a count of all IPs in the last 24 hours
       const twentyForHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
-      const pipeline = [
-        { $match: { time: { $gt: twentyForHoursAgo } } },
-        { $group: { _id: '$ip', count: { $sum: 1 } } },
-        { $sort:  { count: -1 } }
-      ];
-      const aggCursor = db.logEntriesCollection.aggregate(pipeline);
-      const allDocs = await aggCursor.toArray();
+
+      const allDocs = await db.getIpsCount(twentyForHoursAgo);
       const ips = [];
       let allRequests = 0;
       let i = 1;
@@ -45,14 +51,15 @@ async function main() {
         if(i <= 20 || doc.count > 1000) {
           const ip = {
             i: i, address: doc._id, num: doc.count,
-            allTime: await db.logEntriesCollection.count( { ip: doc._id } )
+            allTime: await db.getRequestsCount(doc._id)
           };
           if(doc.count > 5000) {
-            const prs = new PatternRecognitionService(await db.logEntriesCollection.find({
-              time: {$gt: twentyForHoursAgo},
-              ip: doc._id
-            }).toArray());
-            ip.requestPatterns = prs.requestsRepetitionSearch();
+            const prs = new PatternRecognitionService(await db.getRequests(doc._id, twentyForHoursAgo ));
+            ip.requestsRepetiotions = prs.requestsRepetitionSearch();
+            ip.numUnique = prs.uniqueRequests.length;
+            ip.bytes = prs.bytes;
+            ip.numStatusCodes = prs.statusCodes.length;
+            ip.numUserAgents = prs.userAgents.length;
           }
           ips.push(ip);
         }
@@ -63,6 +70,21 @@ async function main() {
         all: allRequests,
       });
     });
+    app.get('/ip/:ip', async (req, res) => {
+      const geoData = await got(`http://api.ipstack.com/${req.params.ip}?access_key=240dbf2c72b8038d08465723ac3ff9aa&location=1`).json();
+      const twentyForHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
+      const prs = new PatternRecognitionService(await db.getRequests(req.params.ip, twentyForHoursAgo ));
+      res.render('ip', {
+        ip: req.params.ip,
+        geoData,
+        uniqueRequests: prs.uniqueRequests,
+        bytes: prs.bytes,
+        requests: prs.docs,
+        statusCodes: prs.statusCodes,
+        userAgents: prs.userAgents
+      });
+    });
+
     const port = argv['localhost-port'] ? argv['localhost-port'] : '3000';
     app.listen(port, () => {
       console.info(`Localhost server started on port ${port}`);

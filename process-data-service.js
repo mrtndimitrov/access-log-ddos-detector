@@ -1,6 +1,6 @@
-const Alpine = require('alpine');
-const moment = require('moment');
-const { DbService } = require('./db-service');
+import Alpine from 'alpine';
+import moment from 'moment';
+import { DbService } from './db-service.js';
 
 /**
  * JSON object return by alpine:
@@ -18,7 +18,7 @@ const { DbService } = require('./db-service');
  * }
  */
 
-class ProcessDataService {
+export class ProcessDataService {
     async parseLogEntry(data, filename) {
         const alpine = new Alpine();
         const lines = data.split(/\r?\n/);
@@ -47,4 +47,3 @@ class ProcessDataService {
         return leftOver;
     }
 }
-exports.ProcessDataService = ProcessDataService;

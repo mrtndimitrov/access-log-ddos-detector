@@ -1,4 +1,4 @@
-export const apps = [{
+const apps = [{
         name: 'DdosDetector',
         script: 'app.js',
         args: '--path-watch=/data/prosveta/logs/access/all-*.log --block-ips-file=/data/prosveta/log-parser/blockips.conf',

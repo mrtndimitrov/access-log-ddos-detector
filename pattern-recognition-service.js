@@ -1,3 +1,5 @@
+import moment from 'moment';
+
 export class PatternRecognitionService {
     docs = [];
     uniqueRequests = [];
@@ -10,6 +12,7 @@ export class PatternRecognitionService {
         const statusCodesObject = {};
         const userAgentsObject = {};
         let totalSize = 0;
+        let previousDate = docs.length > 0 ? docs[0].time : null;
         for(const doc of docs) {
             const uniqueRequestsKey = `${doc.request}${doc.method}${doc.status}`;
             if(!uniqueRequestsObject[uniqueRequestsKey]){
@@ -25,6 +28,10 @@ export class PatternRecognitionService {
             statusCodesObject[doc.status]++;
             userAgentsObject[doc.user_agent]++;
             totalSize += parseInt(doc.size, 10);
+            // calculate the time elapsed between the previous and the current request
+            doc.after = (doc.time.getTime() - previousDate.getTime()) / 1000;
+            previousDate = doc.time;
+            doc.formattedDate = moment(doc.time).format('HH:mm DD-MM-YYYY');
         }
         this.uniqueRequests = Object.entries(uniqueRequestsObject);
         this.uniqueRequests.sort((a, b) => {
@@ -38,17 +45,66 @@ export class PatternRecognitionService {
         this.userAgents.sort((a, b) => {
             return a[1] < b[1] ? 1 : -1;
         });
-        this.bytes = this.formatBytes(totalSize);
+        this.bytes = this._formatBytes(totalSize);
     }
     requestsRepetitionSearch() {
         return this.docs.length;
     }
 
-    getRequestsPerMinute() {
+    getRequestsPerDate() {
+        const requestsPerMinuteObject = {};
+        const requestsPerHourObject = {};
+        for(const doc of this.docs) {
+            const minuteKey = moment(doc.time).format('HH:mm DD-MM-YYYY');
+            if(!requestsPerMinuteObject[minuteKey]){
+                requestsPerMinuteObject[minuteKey] = {all: 0};
+                for (const statusCode of this.statusCodes) {
+                    requestsPerMinuteObject[minuteKey][statusCode[0]] = 0;
+                }
+            }
+            requestsPerMinuteObject[minuteKey].all++;
+            requestsPerMinuteObject[minuteKey][doc.status]++;
 
+            const hourKey = moment(doc.time).format('HH DD-MM-YYYY');
+            if(!requestsPerHourObject[hourKey]){
+                requestsPerHourObject[hourKey] = {all: 0};
+                for (const statusCode of this.statusCodes) {
+                    requestsPerHourObject[hourKey][statusCode[0]] = 0;
+                }
+            }
+            requestsPerHourObject[hourKey].all++;
+            requestsPerHourObject[hourKey][doc.status]++;
+        }
+
+        const minuteLabels = [];
+        const minuteDatasets = {all: []};
+        for (const statusCode of this.statusCodes) {
+            minuteDatasets[statusCode[0]] = [];
+        }
+        for (const minuteArray of Object.entries(requestsPerMinuteObject)){
+            minuteLabels.push(`'${minuteArray[0]}'`);
+            minuteDatasets.all.push(minuteArray[1].all);
+            for (const statusCode of this.statusCodes) {
+                minuteDatasets[statusCode[0]].push(minuteArray[1][statusCode[0]]);
+            }
+        }
+
+        const hourLabels = [];
+        const hourDatasets = {all: []};
+        for (const statusCode of this.statusCodes) {
+            hourDatasets[statusCode[0]] = [];
+        }
+        for (const hourArray of Object.entries(requestsPerHourObject)){
+            hourLabels.push(`'${hourArray[0]}'`);
+            hourDatasets.all.push(hourArray[1].all);
+            for (const statusCode of this.statusCodes) {
+                hourDatasets[statusCode[0]].push(hourArray[1][statusCode[0]]);
+            }
+        }
+        return {minuteLabels, minuteDatasets, hourLabels, hourDatasets};
     }
 
-    formatBytes(bytes, decimals = 2) {
+    _formatBytes(bytes, decimals = 2) {
         if (bytes === 0) return '0 Bytes';
 
         const k = 1024;

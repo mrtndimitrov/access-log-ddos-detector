@@ -2,7 +2,7 @@ module.exports = {
   apps : [{
     name: 'DdosDetector',
     script: 'app.js',
-    args: '--path-watch=/data/prosveta/logs/access/all-*.log',
+    args: '--path-watch=/data/prosveta/logs/access/all-*.log --block-ips-file=/data/prosveta/log-parser/blockips.conf',
     instances: '1',
     autorestart: true,
     watch: false,

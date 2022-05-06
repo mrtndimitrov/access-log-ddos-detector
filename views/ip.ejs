@@ -8,22 +8,54 @@
     <title>DDOS detector</title>
 </head>
 <body>
-<div class="container">
-    <h1>Information about IP <%= ip %></h1>
-    <hr>
-    <div class="container">
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/">DDOS Detector</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse"
+                aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav me-auto mb-2 mb-md-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/about">About</a>
+                </li>
+            </ul>
+            <h3 class="me-5 text-white">IP: <%= ip %></h3>
+            <form class="d-flex">
+                <button class="btn btn-outline-warning me-2" type="submit" onclick="window.location = '/suspicious/<%= ip %>'; return false;">Mark as suspicious</button>
+                <% if(ipInfo.blocked) { %><button class="btn btn-outline-danger me-2" type="submit" onclick="window.location = '/unblock/<%= ip %>'; return false;">Unblock</button>
+                <% } else { %><button class="btn btn-outline-danger me-2" type="submit" onclick="window.location = '/block/<%= ip %>'; return false;">Block</button><% } %>
+                <% if(ipInfo.allowed) { %><button class="btn btn-outline-success me-2" type="submit" onclick="window.location = '/disallow/<%= ip %>'; return false;">Remove allowed</button>
+                <% } else { %><button class="btn btn-outline-success me-2" type="submit" onclick="window.location = '/allow/<%= ip %>'; return false;">Allow</button><% } %>
+            </form>
+            <form class="d-flex">
+                <input class="form-control me-2" id="ip-search" type="search" placeholder="IP search" aria-label="IP search">
+                <button class="btn btn-outline-primary" type="submit" id="ip-search-btn">Search</button>
+            </form>
+        </div>
+    </div>
+</nav>
+<div class="main container">
+    <div class="container-fluid">
         <div class="row">
             <div class="col-8">
                 <div class="p-3 bg-body rounded shadow-sm">
-                <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
-                        src="https://maps.google.com/maps?width=100%25&amp;height=600&amp;hl=en&amp;q=<%= geoData.latitude %>,<%= geoData.longitude %>&amp;t=&amp;z=6&amp;ie=UTF8&amp;iwloc=B&amp;output=embed"></iframe>
+                    <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"
+                            src="https://maps.google.com/maps?width=100%25&amp;height=600&amp;hl=en&amp;q=<%= geoData.latitude %>,<%= geoData.longitude %>&amp;t=&amp;z=6&amp;ie=UTF8&amp;iwloc=B&amp;output=embed"></iframe>
                 </div>
             </div>
             <div class="col">
                 <div class="p-3 bg-body rounded shadow-sm" style="min-height: 338px">
                     <h6 class="border-bottom pb-2 mb-0">Geo info</h6>
                     <div class="d-flex text-muted pt-3">
-                        <img class="bd-placeholder-img flex-shrink-0 me-2 rounded" src="<%= geoData.location.country_flag %>" width="32" height="32">
+                        <% if (geoData.location) { %>
+                        <img class="bd-placeholder-img flex-shrink-0 me-2 rounded"
+                             src="<%= geoData.location.country_flag %>" width="32" height="32">
+                        <% } %>
                         <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-gray-dark"><%= geoData.country_name %></strong>
@@ -33,7 +65,11 @@
                         </div>
                     </div>
                     <div class="d-flex text-muted pt-3">
-                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32" xmlns="http://www.w3.org/2000/svg" role="img" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#007bff"></rect></svg>
+                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32"
+                             xmlns="http://www.w3.org/2000/svg" role="img" preserveAspectRatio="xMidYMid slice"
+                             focusable="false">
+                            <rect width="100%" height="100%" fill="#007bff"></rect>
+                        </svg>
                         <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-gray-dark"><%= geoData.city %></strong>
@@ -43,7 +79,11 @@
                         </div>
                     </div>
                     <div class="d-flex text-muted pt-3">
-                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32" xmlns="http://www.w3.org/2000/svg" role="img" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#e83e8c"></rect></svg>
+                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32"
+                             xmlns="http://www.w3.org/2000/svg" role="img" preserveAspectRatio="xMidYMid slice"
+                             focusable="false">
+                            <rect width="100%" height="100%" fill="#e83e8c"></rect>
+                        </svg>
                         <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-gray-dark">WhatIsMyIpAddress.com</strong>
@@ -53,7 +93,11 @@
                         </div>
                     </div>
                     <div class="d-flex text-muted pt-3">
-                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32" xmlns="http://www.w3.org/2000/svg" role="img" preserveAspectRatio="xMidYMid slice" focusable="false"><rect width="100%" height="100%" fill="#6f42c1"></rect></svg>
+                        <svg class="bd-placeholder-img flex-shrink-0 me-2 rounded" width="32" height="32"
+                             xmlns="http://www.w3.org/2000/svg" role="img" preserveAspectRatio="xMidYMid slice"
+                             focusable="false">
+                            <rect width="100%" height="100%" fill="#6f42c1"></rect>
+                        </svg>
                         <div class="pb-3 mb-0 small lh-sm border-bottom w-100">
                             <div class="d-flex justify-content-between">
                                 <strong class="text-gray-dark">Project Honey Pot</strong>
@@ -67,8 +111,31 @@
         </div>
     </div>
     <hr>
-    <h4>TOTAL REQUESTS: <%= requests.length %></h4>
-    <h4>TOTAL BYTES: <%= bytes %></h4>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <h5 class="card-header">For period</h5>
+                    <div class="card-body">
+                        <h5 class="card-title">TOTAL REQUESTS: <%= requests.length %></h5>
+                        <h5 class="card-title">TOTAL BYTES: <%= bytes %></h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col">
+                <div class="card">
+                    <h5 class="card-header">General</h5>
+                    <div class="card-body">
+                        <h5 class="card-title">ALL TIME REQUESTS: <%= allTimeRequests %></h5>
+                        <span class="badge bg-primary">Checked <%= ipInfo.checked %> times</span>
+                        <% if(ipInfo.blocked) { %><span class="badge bg-danger">Blocked</span><% } %>
+                        <% if(ipInfo.allowed) { %><span class="badge bg-success">Allowed</span><% } %>
+                        <% if(ipInfo.suspicious > 0) { %><span class="badge bg-warning text-dark">Suspicious <%= ipInfo.suspicious %></span><% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <hr>
     <table class="table table-sm caption-top fixed-height">
         <caption>Different status codes returned: <%= statusCodes.length %></caption>
@@ -80,13 +147,14 @@
         </thead>
         <tbody>
         <%_ for(const statusCode of statusCodes) { _%>
-        <tr>
-            <th scope="row" class="sixty-percent"><%= statusCode[0] %></th>
-            <td class="forty-percent"><%= statusCode[1] %></td>
-        </tr>
+            <tr>
+                <th scope="row" class="sixty-percent"><%= statusCode[0] %></th>
+                <td class="forty-percent"><%= statusCode[1] %></td>
+            </tr>
         <%_ } _%>
         </tbody>
     </table>
+    <hr>
     <table class="table table-sm caption-top fixed-height">
         <caption>Different user agents used: <%= userAgents.length %></caption>
         <thead>
@@ -104,6 +172,7 @@
         <%_ } _%>
         </tbody>
     </table>
+    <hr>
     <table class="table table-sm caption-top fixed-height">
         <caption>Unique requests: <%= uniqueRequests.length %></caption>
         <thead>
@@ -117,7 +186,8 @@
         <tbody>
         <%_ for(const uniqueRequest of uniqueRequests) { _%>
             <tr>
-                <th scope="row" class="seventy-percent no-wrap" data-bs-toggle="tooltip" data-bs-placement="top" title="<%= uniqueRequest[1].request %>"><%= uniqueRequest[1].request %></th>
+                <th scope="row" class="seventy-percent no-wrap" data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="<%= uniqueRequest[1].request %>"><%= uniqueRequest[1].request %></th>
                 <td class="ten-percent"><%= uniqueRequest[1].method %></td>
                 <td class="ten-percent"><%= uniqueRequest[1].status %></td>
                 <td class="ten-percent"><%= uniqueRequest[1].num %></td>
@@ -125,9 +195,149 @@
         <%_ } _%>
         </tbody>
     </table>
+    <hr>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <canvas id="requests-per-minute" style="width:100%;height:400px"></canvas>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col">
+                <canvas id="requests-per-hour" style="width:100%;height:400px"></canvas>
+            </div>
+        </div>
+    </div>
+    <hr>
+    <table class="table table-sm caption-top fixed-height">
+        <caption>All requests for the period with elapsed time between them: <%= requests.length %></caption>
+        <thead>
+        <tr>
+            <th scope="col" class="ten-percent">Elapsed time in seconds</th>
+            <th scope="col" class="twenty-percent">Date</th>
+            <th scope="col" class="fifty-percent">Request</th>
+            <th scope="col" class="ten-percent text-center">Method</th>
+            <th scope="col" class="ten-percent text-center">Status code</th>
+        </tr>
+        </thead>
+        <tbody>
+        <%_ for(const request of requests) { _%>
+            <tr>
+                <td class="ten-percent"><%= request.after %></td>
+                <td class="twenty-percent"><%= request.formattedDate %></td>
+                <th scope="row" class="fifty-percent no-wrap" data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="<%= request.request %>"><%= request.request %></th>
+                <td class="ten-percent"><%= request.method %></td>
+                <td class="ten-percent"><%= request.status %></td>
+            </tr>
+        <%_ } _%>
+        </tbody>
+    </table>
+</div>
+<div class="container">
+    <footer class="py-3 my-4">
+        <hr>
+        <p class="text-center text-muted">© 2022 Martin Koroudjiev; All rights reserved</p>
+    </footer>
 </div>
 <script src="/bootstrap-js/bootstrap.bundle.js" crossorigin="anonymous"></script>
 <script src="/chart-js/chart.js" crossorigin="anonymous"></script>
 <script src="/js/script.js" crossorigin="anonymous"></script>
+<script>
+    const colors = [
+        '#8549ba',
+        '#4dc9f6',
+        '#f67019',
+        '#f53794',
+        '#537bc4',
+        '#acc236',
+        '#166a8f',
+        '#00a950',
+        '#58595b',
+        '#8549ba',
+        '#4dc9f6',
+        '#f67019',
+        '#f53794',
+        '#537bc4',
+        '#acc236',
+        '#166a8f',
+        '#00a950',
+        '#58595b',
+    ];
+    const ctxMinute = document.getElementById('requests-per-minute');
+    const dataMinute = {
+        labels: [<%- getRequestsPerDate.minuteLabels.join(',') %>],
+        datasets: [{
+            label: 'All requests',
+            data: [<%= getRequestsPerDate.minuteDatasets.all.join(',') %>],
+            borderColor: colors[0],
+            backgroundColor: colors[0],
+        }
+            <%_ let i = 1; for(const statusCode of statusCodes) { _%>
+            , {
+                label: '<%= statusCode[0] %> status code',
+                data: [<%= getRequestsPerDate.minuteDatasets[statusCode[0]].join(',') %>],
+                borderColor: colors[<%= i %>],
+                backgroundColor: colors[<%= i++ %>],
+            }
+            <%_ } _%>
+        ]
+    };
+    new Chart(ctxMinute, {
+        type: 'line',
+        data: dataMinute,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Requests with status codes per minute'
+                }
+            }
+        },
+    });
+
+    const ctxHour = document.getElementById('requests-per-hour');
+    const dataHour = {
+        labels: [<%- getRequestsPerDate.hourLabels.join(',') %>],
+        datasets: [{
+            label: 'All requests',
+            data: [<%= getRequestsPerDate.hourDatasets.all.join(',') %>],
+            borderColor: colors[0],
+            backgroundColor: colors[0],
+        }
+            <%_ i = 1; for(const statusCode of statusCodes) { _%>
+            , {
+                label: '<%= statusCode[0] %> status code',
+                data: [<%= getRequestsPerDate.hourDatasets[statusCode[0]].join(',') %>],
+                borderColor: colors[<%= i %>],
+                backgroundColor: colors[<%= i++ %>],
+            }
+            <%_ } _%>
+        ]
+    };
+    new Chart(ctxHour, {
+        type: 'bar',
+        data: dataHour,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                title: {
+                    display: true,
+                    text: 'Requests with status codes per hour'
+                }
+            }
+        },
+    });
+</script>
 </body>
 </html>

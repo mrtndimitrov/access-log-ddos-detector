@@ -17,15 +17,24 @@ table.fixed-height th.no-wrap {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-.sixty-percent {
-    width: 60%;
+.ten-percent {
+    width: 10%;
+}
+.twenty-percent {
+    width: 10%;
 }
 .forty-percent {
     width: 40%;
 }
+.fifty-percent {
+    width: 40%;
+}
+.sixty-percent {
+    width: 60%;
+}
 .seventy-percent {
     width: 70%;
 }
-.ten-percent {
-    width: 10%;
+.main.container {
+    margin-top: 80px;
 }

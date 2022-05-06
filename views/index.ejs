@@ -8,7 +8,29 @@
     <title>DDOS detector</title>
 </head>
 <body>
-<div class="container">
+<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="/">DDOS Detector</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
+      <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="/">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/about">About</a>
+        </li>
+      </ul>
+      <form class="d-flex">
+        <input class="form-control me-2" id="ip-search" type="search" placeholder="IP search" aria-label="IP search">
+        <button class="btn btn-outline-primary" type="button" id="ip-search-btn">Search</button>
+      </form>
+    </div>
+  </div>
+</nav>
+<div class="main container">
   <h1>Summary of requests for last 24 hours</h1>
   <hr>
   <h4>TOTAL REQUESTS: <%= all %></h4>
@@ -31,7 +53,7 @@
     </thead>
     <tbody>
     <%_ for(const ip of ips) { _%>
-      <tr>
+      <tr class="table-<%= ip.rowColor() %>">
         <th scope="row"><%= ip.i %>.</th>
         <td><a href="/ip/<%= ip.address %>"><%= ip.address %></a></td>
         <td><%= ip.num %></td>

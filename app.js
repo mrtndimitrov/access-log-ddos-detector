@@ -10,7 +10,7 @@ import { PatternRecognitionService } from './pattern-recognition-service.js';
 
 const app = express();
 
-async function main() {
+async function _main() {
   app.set('views', './views');
   app.set('view engine', 'ejs');
   const __filename = fileURLToPath(import.meta.url);
@@ -49,11 +49,26 @@ async function main() {
       for (const doc of allDocs) {
         allRequests += doc.count;
         if(i <= 20 || doc.count > 1000) {
+          const ipInfo = await db.getIpInfo(doc._id);
           const ip = {
             i: i, address: doc._id, num: doc.count,
-            allTime: await db.getRequestsCount(doc._id)
+            allTime: await db.getRequestsCount(doc._id),
+            rowColor: () => {
+              if (ipInfo) {
+                if (ipInfo.allowed) {
+                  return 'success';
+                } else if (ipInfo.blocked) {
+                  return 'danger';
+                } else if (ipInfo.suspicious > 0) {
+                  return 'warning';
+                } else if (ipInfo.checked > 0) {
+                  return 'info';
+                }
+              }
+              return 'default';
+            }
           };
-          if(doc.count > 5000) {
+          if(_shouldExamineIp(ipInfo, doc.count)) {
             const prs = new PatternRecognitionService(await db.getRequests(doc._id, twentyForHoursAgo ));
             ip.requestsRepetiotions = prs.requestsRepetitionSearch();
             ip.numUnique = prs.uniqueRequests.length;
@@ -71,6 +86,20 @@ async function main() {
       });
     });
     app.get('/ip/:ip', async (req, res) => {
+      let ipInfo = await db.getIpInfo(req.params.ip);
+      if(!ipInfo){
+        ipInfo = {
+          ip: req.params.ip,
+          checked: 1,
+          blocked: false,
+          allowed: false,
+          suspicious: 0
+        }
+        await db.insertIpInfo(ipInfo);
+      } else if(!req.query.no_checked) {
+        ipInfo.checked++;
+        await db.updateIpInfo(ipInfo._id, {checked: ipInfo.checked});
+      }
       const geoData = await got(`http://api.ipstack.com/${req.params.ip}?access_key=240dbf2c72b8038d08465723ac3ff9aa&location=1`).json();
       const twentyForHoursAgo = new Date(new Date().getTime() - (24 * 60 * 60 * 1000));
       const prs = new PatternRecognitionService(await db.getRequests(req.params.ip, twentyForHoursAgo ));
@@ -81,8 +110,39 @@ async function main() {
         bytes: prs.bytes,
         requests: prs.docs,
         statusCodes: prs.statusCodes,
-        userAgents: prs.userAgents
+        userAgents: prs.userAgents,
+        getRequestsPerDate: prs.getRequestsPerDate(),
+        ipInfo: ipInfo,
+        allTimeRequests: await db.getRequestsCount(req.params.ip)
       });
+    });
+    app.get('/suspicious/:ip', async (req, res) => {
+      let ipInfo = await db.getIpInfo(req.params.ip);
+      await db.updateIpInfo(ipInfo._id, {suspicious: ++ipInfo.suspicious});
+      res.redirect(`/ip/${req.params.ip}?no_checked=1`)
+    });
+    app.get('/block/:ip', async (req, res) => {
+      let ipInfo = await db.getIpInfo(req.params.ip);
+      await db.updateIpInfo(ipInfo._id, {blocked: true, allowed: false});
+      blockIpManagement.block(req.params.ip);
+      res.redirect(`/ip/${req.params.ip}?no_checked=1`)
+    });
+    app.get('/unblock/:ip', async (req, res) => {
+      let ipInfo = await db.getIpInfo(req.params.ip);
+      await db.updateIpInfo(ipInfo._id, {blocked: false});
+      blockIpManagement.unblock(req.params.ip);
+      res.redirect(`/ip/${req.params.ip}?no_checked=1`)
+    });
+    app.get('/allow/:ip', async (req, res) => {
+      let ipInfo = await db.getIpInfo(req.params.ip);
+      await db.updateIpInfo(ipInfo._id, {allowed: true, blocked: false});
+      blockIpManagement.unblock(req.params.ip);
+      res.redirect(`/ip/${req.params.ip}?no_checked=1`)
+    });
+    app.get('/disallow/:ip', async (req, res) => {
+      let ipInfo = await db.getIpInfo(req.params.ip);
+      await db.updateIpInfo(ipInfo._id, {allowed: false});
+      res.redirect(`/ip/${req.params.ip}?no_checked=1`)
     });
 
     const port = argv['localhost-port'] ? argv['localhost-port'] : '3000';
@@ -93,4 +153,16 @@ async function main() {
     console.error(err);
   }
 }
-main();
+function _shouldExamineIp(ipInfo, numRequests) {
+  if(!ipInfo) {
+    return numRequests > 5000;
+  }
+  if(ipInfo.allowed || ipInfo.blocked) {
+    return false;
+  }
+  if(ipInfo.suspicious > 0) {
+    return true;
+  }
+  return numRequests > 5000;
+}
+_main();

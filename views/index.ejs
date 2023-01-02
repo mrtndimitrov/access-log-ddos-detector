@@ -42,6 +42,7 @@
       <tr>
         <th scope="col">#</th>
         <th scope="col">IP address</th>
+        <th scope="col">Country</th>
         <th scope="col"># requests</th>
         <th scope="col"># unique requests</th>
         <th scope="col">Total bytes returned</th>
@@ -56,6 +57,7 @@
       <tr class="table-<%= ip.rowColor() %>">
         <th scope="row"><%= ip.i %>.</th>
         <td><a href="/ip/<%= ip.address %>"><%= ip.address %></a></td>
+        <td><% if(ip.geoip){ %><%= ip.geoip.geo.country_name %><% } %></td>
         <td><%= ip.num %></td>
         <td><%= ip.numUnique %></td>
         <td><%= ip.bytes %></td>

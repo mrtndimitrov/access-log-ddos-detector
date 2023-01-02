@@ -66,7 +66,8 @@ async function _main() {
                 }
               }
               return 'default';
-            }
+            },
+            geoip: doc.geoip
           };
           if(_shouldExamineIp(ipInfo, doc.count)) {
             const prs = new PatternRecognitionService(await db.getRequests(doc._id, twentyForHoursAgo ));

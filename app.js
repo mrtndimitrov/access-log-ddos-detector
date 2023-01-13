@@ -69,7 +69,7 @@ async function _main() {
             },
             geoip: doc.geoip
           };
-          if(_shouldExamineIp(ipInfo, doc.count)) {
+          if(req.query.html !== 'no' && _shouldExamineIp(ipInfo, doc.count)) {
             const prs = new PatternRecognitionService(await db.getRequests(doc._id, twentyForHoursAgo ));
             ip.requestsRepetiotions = prs.requestsRepetitionSearch();
             ip.numUnique = prs.uniqueRequests.length;

@@ -3,6 +3,6 @@
 
 # TOP 20 (or > 1000 hits) IPs:
 <%_ for(const ip of ips) { _%>
-    <% if (ip.info.allowed || ip.info.blocked) { continue; } %>
+    <% if (ip.info && (ip.info.allowed || ip.info.blocked)) { continue; } %>
 <%= ip.i %>. <% if(ip.geoip){ %><%= ip.geoip.geo.country_name %><% } else if (ip.country && ip.country.country) { %><%= ip.country.country.iso_code %><% } %>: <%= ip.address %>: <%= ip.num %>
 <%_ } _%>

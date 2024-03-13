@@ -172,6 +172,7 @@ function _shouldExamineIp(ipInfo, numRequests) {
 }
 async function _getCountry(ip) {
   const lookup = await maxmind.open(geolite2.paths.country);
+  // const lookup = await maxmind.open<CountryResponse>('/data5/prosveta/access-log-ddos-detector/node_modules/geolite2/dbs/GeoLite2-Country.mmdb');
   return lookup.get(ip);
 }
 _main();

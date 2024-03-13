@@ -1,6 +1,8 @@
 import express from 'express';
 import got from 'got';
 import minimist from 'minimist';
+import geolite2 from 'geolite2';
+import maxmind, { CountryResponse } from 'maxmind';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { FileWatcherService } from './file-watcher-service.js';
@@ -67,7 +69,8 @@ async function _main() {
               }
               return 'default';
             },
-            geoip: doc.geoip
+            geoip: doc.geoip,
+            country: await _getCountry(doc._id)
           };
           if(req.query.html !== 'no' && _shouldExamineIp(ipInfo, doc.count)) {
             const prs = new PatternRecognitionService(await db.getRequests(doc._id, twentyForHoursAgo ));
@@ -165,5 +168,9 @@ function _shouldExamineIp(ipInfo, numRequests) {
     return true;
   }
   return numRequests > 5000;
+}
+async function _getCountry(ip) {
+  const lookup = await maxmind.open<CountryResponse>(geolite2.paths.country);
+  return lookup.get(ip);
 }
 _main();

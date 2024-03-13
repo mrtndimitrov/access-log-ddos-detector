@@ -3,7 +3,6 @@ import got from 'got';
 import minimist from 'minimist';
 import geolite2 from 'geolite2';
 import maxmind from 'maxmind';
-const { CountryResponse } = maxmind;
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { FileWatcherService } from './file-watcher-service.js';
@@ -172,7 +171,8 @@ function _shouldExamineIp(ipInfo, numRequests) {
 }
 async function _getCountry(ip) {
   const lookup = await maxmind.open(geolite2.paths.country);
-  // const lookup = await maxmind.open<CountryResponse>('/data5/prosveta/access-log-ddos-detector/node_modules/geolite2/dbs/GeoLite2-Country.mmdb');
-  return lookup.get(ip);
+  const country = lookup.get(ip);
+  console.log(country)
+  return country;
 }
 _main();

@@ -171,7 +171,7 @@ function _shouldExamineIp(ipInfo, numRequests) {
   return numRequests > 5000;
 }
 async function _getCountry(ip) {
-  const lookup = await maxmind.open<CountryResponse>(geolite2.paths.country);
+  const lookup = await maxmind.open(geolite2.paths.country);
   return lookup.get(ip);
 }
 _main();

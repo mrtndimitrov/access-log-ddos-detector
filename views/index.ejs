@@ -57,7 +57,7 @@
       <tr class="table-<%= ip.rowColor() %>">
         <th scope="row"><%= ip.i %>.</th>
         <td><a href="/ip/<%= ip.address %>"><%= ip.address %></a></td>
-        <td><% if(ip.geoip){ %><%= ip.geoip.geo.country_name %><% } else if (ip.country) { %><%= ip.country %><% } %></td>
+        <td><% if(ip.geoip){ %><%= ip.geoip.geo.country_name %><% } else if (ip.country) { %><%= ip.country.iso_code %><% } %></td>
         <td><%= ip.num %></td>
         <td><%= ip.numUnique %></td>
         <td><%= ip.bytes %></td>

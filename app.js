@@ -1,15 +1,15 @@
 import express from 'express';
 import got from 'got';
 import minimist from 'minimist';
-import geolite2 from 'geolite2';
-import maxmind from 'maxmind';
-const { CountryResponse } = maxmind;
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { FileWatcherService } from './file-watcher-service.js';
 import { BlockIpManagementService } from './block-ip-management-service.js';
 import { DbService } from './db-service.js';
 import { PatternRecognitionService } from './pattern-recognition-service.js';
+
+const geolite2 = require('geolite2');
+const maxmind = require('maxmind');
 
 const app = express();
 
@@ -171,7 +171,7 @@ function _shouldExamineIp(ipInfo, numRequests) {
   return numRequests > 5000;
 }
 async function _getCountry(ip) {
-  const lookup = await maxmind.open<CountryResponse>(geolite2.paths.country);
+  const lookup = maxmind.openSync(geolite2.paths.country);
   return lookup.get(ip);
 }
 _main();

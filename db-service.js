@@ -51,7 +51,7 @@ export class DbService {
     async getRequests(ip, from = null, to = null) {
         const where = { ip: ip };
         this._constructPeriod(where, from, to);
-        return this.logEntriesCollection.find(where).sort({time: 1}).toArray();
+        return this.logEntriesCollection.find(where).sort({ time: 1 }).toArray();
     }
 
     async insertIpInfo(data) {

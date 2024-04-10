@@ -35,19 +35,23 @@ export class BlockIpManagementService {
         }
     }
 
-    block(ip) {
+    async block(ip) {
         if (this.blockIpsFile && fs.existsSync(this.blockIpsFile)) {
             if (this.ips.indexOf(ip) === -1) {
+                // let's reload the file first in case someone has modified it manually
+                await this._processBlockFile();
                 console.log(`Adding IP ${ip} to block file`);
                 this.ips.push(ip);
                 fs.writeFileSync(this.blockIpsFile, this.ips.join(EOL));
             }
         }
     }
-    unblock(ip) {
+    async unblock(ip) {
         if (this.blockIpsFile && fs.existsSync(this.blockIpsFile)) {
             const index = this.ips.indexOf(ip);
             if (index > -1) {
+                // let's reload the file first in case someone has modified it manually
+                await this._processBlockFile();
                 console.log(`Removing IP ${ip} to block file`);
                 this.ips.splice(index, 1);
                 fs.writeFileSync(this.blockIpsFile, this.ips.join(EOL));

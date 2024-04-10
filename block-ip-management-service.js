@@ -52,7 +52,7 @@ export class BlockIpManagementService {
             if (index > -1) {
                 // let's reload the file first in case someone has modified it manually
                 await this._processBlockFile();
-                console.log(`Removing IP ${ip} to block file`);
+                console.log(`Removing IP ${ip} from block file`);
                 this.ips.splice(index, 1);
                 fs.writeFileSync(this.blockIpsFile, this.ips.join(EOL));
             }

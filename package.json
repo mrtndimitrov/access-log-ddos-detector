@@ -8,7 +8,7 @@
     "dev": "nodemon app.js --localhost-port=3001 --mongodb-port=27018"
   },
   "geolite2": {
-    "license-file": "/data5/prosveta/maxmind-license.key"
+    "license-file": "/prosveta/maxmind-license.key"
   },
   "type": "module",
   "dependencies": {

@@ -6,7 +6,7 @@ import maxmind from 'maxmind';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { FileWatcherService } from './file-watcher-service.js';
-import { BlockIpManagementService } from './block-ip-management-service.js';
+import { IpManagementService } from './ip-management-service.js';
 import { DbService } from './db-service.js';
 import { PatternRecognitionService } from './pattern-recognition-service.js';
 
@@ -30,7 +30,7 @@ async function _main() {
     const db = await DbService.getInstance();
 
     // initialize the block ip management service
-    const blockIpManagement = new BlockIpManagementService(argv);
+    const ipManagement = new IpManagementService(argv);
 
     // Check which files we need to process and watch for changes
     FileWatcherService.parseFiles(argv, (files) => {
@@ -129,24 +129,27 @@ async function _main() {
     app.get('/block/:ip', async (req, res) => {
       let ipInfo = await db.getIpInfo(req.params.ip);
       await db.updateIpInfo(ipInfo._id, {blocked: true, allowed: false});
-      blockIpManagement.block(req.params.ip);
+      await ipManagement.unallow(req.params.ip);
+      await ipManagement.block(req.params.ip);
       res.redirect(`/ip/${req.params.ip}?no_checked=1`)
     });
     app.get('/unblock/:ip', async (req, res) => {
       let ipInfo = await db.getIpInfo(req.params.ip);
       await db.updateIpInfo(ipInfo._id, {blocked: false});
-      blockIpManagement.unblock(req.params.ip);
+      await ipManagement.unblock(req.params.ip);
       res.redirect(`/ip/${req.params.ip}?no_checked=1`)
     });
     app.get('/allow/:ip', async (req, res) => {
       let ipInfo = await db.getIpInfo(req.params.ip);
       await db.updateIpInfo(ipInfo._id, {allowed: true, blocked: false});
-      blockIpManagement.unblock(req.params.ip);
+      await ipManagement.unblock(req.params.ip);
+      await ipManagement.allow(req.params.ip);
       res.redirect(`/ip/${req.params.ip}?no_checked=1`)
     });
     app.get('/disallow/:ip', async (req, res) => {
       let ipInfo = await db.getIpInfo(req.params.ip);
       await db.updateIpInfo(ipInfo._id, {allowed: false});
+      await ipManagement.unallow(req.params.ip);
       res.redirect(`/ip/${req.params.ip}?no_checked=1`)
     });
 
